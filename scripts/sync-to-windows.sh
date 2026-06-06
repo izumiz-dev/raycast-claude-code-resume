@@ -20,10 +20,13 @@ if [[ ! -d /mnt/c ]]; then
 fi
 
 # Default destination: <Windows user home>/dev/raycast-claude-launcher.
-# Resolve the Windows username via cmd.exe rather than hardcoding it.
+# Resolve the Windows username instead of hardcoding it. We call cmd.exe by absolute
+# path (Windows interop isn't always on PATH) and from /mnt/c, because running it while
+# the cwd is a WSL/UNC path makes it warn and drop %USERNAME%.
 default_win_dest() {
-  local u
-  u="$(cmd.exe /c 'echo %USERNAME%' 2>/dev/null | tr -d '\r\n ')"
+  local cmd_exe=/mnt/c/Windows/System32/cmd.exe u
+  command -v cmd.exe >/dev/null 2>&1 && cmd_exe=cmd.exe
+  u="$( (cd /mnt/c && "$cmd_exe" /c 'echo %USERNAME%') 2>/dev/null | tr -d '\r\n ')"
   [[ -n "$u" && -d "/mnt/c/Users/$u" ]] && printf '/mnt/c/Users/%s/dev/raycast-claude-launcher' "$u"
   return 0 # never fail: an empty result must reach the friendly -z check below, not trip set -e
 }
