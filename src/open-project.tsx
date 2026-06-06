@@ -42,7 +42,7 @@ export default function OpenProject() {
           });
         }
       }
-      for (const name of await readDirSafe(projectsDir())) {
+      for (const name of await readDirSafe(await projectsDir())) {
         const cwd = name.startsWith("-") ? name.replace(/-/g, "/") : name;
         if (!map.has(cwd))
           map.set(cwd, { cwd, label: path.basename(cwd) || cwd });

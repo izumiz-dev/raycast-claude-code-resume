@@ -12,8 +12,22 @@
 set -euo pipefail
 
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DEST="${WIN_DEST:-/mnt/c/Users/user/dev/raycast-claude-launcher}"
 WATCH=0
+
+if [[ ! -d /mnt/c ]]; then
+  echo "ERROR: /mnt/c not found. Run this on WSL (not needed on macOS / native Linux)." >&2
+  exit 1
+fi
+
+# Default destination: <Windows user home>/dev/raycast-claude-launcher.
+# Resolve the Windows username via cmd.exe rather than hardcoding it.
+default_win_dest() {
+  local u
+  u="$(cmd.exe /c 'echo %USERNAME%' 2>/dev/null | tr -d '\r\n ')"
+  [[ -n "$u" && -d "/mnt/c/Users/$u" ]] && printf '/mnt/c/Users/%s/dev/raycast-claude-launcher' "$u"
+  return 0 # never fail: an empty result must reach the friendly -z check below, not trip set -e
+}
+DEST="${WIN_DEST:-$(default_win_dest)}"
 
 for arg in "$@"; do
   case "$arg" in
@@ -22,8 +36,9 @@ for arg in "$@"; do
   esac
 done
 
-if [[ ! -d /mnt/c ]]; then
-  echo "ERROR: /mnt/c not found. Run this on WSL (not needed on macOS / native Linux)." >&2
+if [[ -z "$DEST" ]]; then
+  echo "ERROR: could not determine the destination. Set WIN_DEST or pass it as an argument," >&2
+  echo "       e.g. WIN_DEST=/mnt/c/Users/<you>/dev/raycast-claude-launcher $0" >&2
   exit 1
 fi
 

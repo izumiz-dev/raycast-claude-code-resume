@@ -25,19 +25,33 @@ export function prefs(): Prefs {
   return getPreferenceValues<Prefs>();
 }
 
-export function claudeHome(): string {
+let cachedClaudeHome: string | undefined;
+
+/**
+ * Resolve the path to `.claude`.
+ *  - mac/Linux: ~/.claude
+ *  - Windows: a UNC path into WSL. We must NOT assume the WSL Linux username equals
+ *    the Windows username (os.userInfo() here is the Windows user, which often differs),
+ *    so we ask WSL for the real $HOME and build the UNC path from it.
+ * Async because the Windows branch shells out to WSL; the result is cached.
+ */
+export async function claudeHome(): Promise<string> {
   const p = prefs().claudeHome?.trim();
   if (p) return p;
   if (isWindows) {
+    if (cachedClaudeHome) return cachedClaudeHome;
     const distro = prefs().wslDistro?.trim() || "Ubuntu";
-    return `\\\\wsl.localhost\\${distro}\\home\\${os.userInfo().username}\\.claude`;
+    const home = await wslHome(distro); // e.g. /home/foo
+    cachedClaudeHome = wslToUncPath(distro, `${home}/.claude`);
+    return cachedClaudeHome;
   }
   return path.join(os.homedir(), ".claude");
 }
 
-export const projectsDir = () => path.join(claudeHome(), "projects");
-export const skillsDir = () => path.join(claudeHome(), "skills");
-export const agentsDir = () => path.join(claudeHome(), "agents");
+export const projectsDir = async () =>
+  path.join(await claudeHome(), "projects");
+export const skillsDir = async () => path.join(await claudeHome(), "skills");
+export const agentsDir = async () => path.join(await claudeHome(), "agents");
 
 export const claudeBin = () => prefs().claudeBin?.trim() || "claude";
 
@@ -56,6 +70,75 @@ export async function readDirSafe(dir: string): Promise<string[]> {
     return await fs.readdir(dir);
   } catch {
     return [];
+  }
+}
+
+/** Resolved, human-readable view of the current configuration (for the Setup command). */
+export async function resolvedConfig(): Promise<{
+  platform: string;
+  claudeHome: string;
+  claudeBin: string;
+  wslDistro?: string;
+}> {
+  return {
+    platform: isWindows ? "Windows (WSL)" : isMac ? "macOS" : "Linux",
+    claudeHome: await claudeHome(),
+    claudeBin: claudeBin(),
+    wslDistro: isWindows ? prefs().wslDistro?.trim() || "Ubuntu" : undefined,
+  };
+}
+
+/**
+ * Check that the claude binary resolves in the user's login shell — i.e. the exact
+ * environment launchInteractive() runs in (login + interactive, so mise is loaded).
+ * Only used to surface a hint in the Setup view: a false negative is harmless because
+ * launchInteractive() runs `claude` directly, never `command -v` (e.g. fish doesn't
+ * support `command -v` the POSIX way, so it may report not-found even when claude works).
+ */
+export async function claudeBinFound(): Promise<boolean> {
+  const cmd = `command -v ${shArg(claudeBin())}`;
+  try {
+    if (isWindows) {
+      const distro = prefs().wslDistro?.trim() || "Ubuntu";
+      const shell = await wslLoginShell(distro);
+      const out = await runCapture("wsl.exe", [
+        "-d",
+        distro,
+        "--",
+        shell,
+        "-lic",
+        cmd,
+      ]);
+      return out.trim().length > 0;
+    }
+    const shell = process.env.SHELL || "/bin/zsh";
+    const out = await runCapture(shell, ["-lic", cmd]);
+    return out.trim().length > 0;
+  } catch {
+    return false;
+  }
+}
+
+/** Windows: check the configured WSL distro exists (always true off Windows). */
+export async function wslDistroExists(): Promise<boolean> {
+  if (!isWindows) return true;
+  const distro = prefs().wslDistro?.trim() || "Ubuntu";
+  try {
+    // `wsl -l -q` prints one distro per line, but as UTF-16: read as a utf8
+    // string each char is interleaved with non-printable bytes — strip them.
+    const out = await runCapture("wsl.exe", ["-l", "-q"]);
+    const names = out
+      .split(/\r?\n/)
+      .map((s) =>
+        s
+          .replace(/[^\x20-\x7E]/g, "")
+          .trim()
+          .toLowerCase(),
+      )
+      .filter(Boolean);
+    return names.includes(distro.toLowerCase());
+  } catch {
+    return false;
   }
 }
 
@@ -143,6 +226,34 @@ function runCapture(file: string, args: string[]): Promise<string> {
       (err, stdout) => (err ? reject(err) : resolve(stdout)),
     );
   });
+}
+
+/** Ask WSL for the user's $HOME (e.g. /home/foo). Falls back to /home/<windows-user>. */
+async function wslHome(distro: string): Promise<string> {
+  try {
+    const out = await runCapture("wsl.exe", [
+      "-d",
+      distro,
+      "--",
+      "sh",
+      "-c",
+      "echo $HOME",
+    ]);
+    const home = out.trim().split("\n").pop()?.trim();
+    if (home && home.startsWith("/")) return home;
+  } catch {
+    // ignore → fall back below
+  }
+  // Best-effort only, and often wrong: os.userInfo() here is the Windows user, which
+  // need not match the WSL Linux user (the very assumption we query $HOME to avoid).
+  // We reach this only when the WSL query itself failed, in which case little works anyway.
+  return `/home/${os.userInfo().username}`;
+}
+
+/** /home/foo/.claude → \\wsl.localhost\Ubuntu\home\foo\.claude */
+function wslToUncPath(distro: string, p: string): string {
+  const rel = p.replace(/^\/+/, "").replace(/\//g, "\\");
+  return `\\\\wsl.localhost\\${distro}\\${rel}`;
 }
 
 /** Get the WSL user's login shell (the shell field in /etc/passwd). Falls back to bash. */

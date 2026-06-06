@@ -21,8 +21,9 @@ async function load(): Promise<Item[]> {
   const out: Item[] = [];
 
   // skills: <dir>/SKILL.md
-  for (const entry of await readDirSafe(skillsDir())) {
-    const file = path.join(skillsDir(), entry, "SKILL.md");
+  const sDir = await skillsDir();
+  for (const entry of await readDirSafe(sDir)) {
+    const file = path.join(sDir, entry, "SKILL.md");
     try {
       const body = await fs.readFile(file, "utf8");
       out.push({ name: entry, file, body, kind: "skill" });
@@ -31,9 +32,10 @@ async function load(): Promise<Item[]> {
     }
   }
   // agents: *.md
-  for (const entry of await readDirSafe(agentsDir())) {
+  const aDir = await agentsDir();
+  for (const entry of await readDirSafe(aDir)) {
     if (!entry.endsWith(".md")) continue;
-    const file = path.join(agentsDir(), entry);
+    const file = path.join(aDir, entry);
     try {
       const body = await fs.readFile(file, "utf8");
       out.push({

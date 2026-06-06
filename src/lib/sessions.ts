@@ -40,7 +40,7 @@ function extract(raw: string): { cwd: string; summary: string } {
 }
 
 export async function loadSessions(limit = 200): Promise<Session[]> {
-  const root = projectsDir();
+  const root = await projectsDir();
   const projects = await readDirSafe(root);
   const out: Session[] = [];
 

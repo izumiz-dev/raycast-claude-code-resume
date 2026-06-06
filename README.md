@@ -21,6 +21,7 @@ All UI text is in English. The command name (the manifest `name`) and what Enter
 | **Resume Claude Code Session** (`list-sessions`) | view | Search history (newest first) → resume the chosen session (`claude -r <id>`) |
 | **Open Claude Code Project** (`open-project`) | view | A few chars of a repo → start claude there (`Start New Session` / `Continue Last Session`) |
 | **Browse Claude Code Skills & Agents** (`skills-agents`) | view | Preview / copy / open files under `~/.claude/skills` and `agents` |
+| **Check Claude Code Setup** (`setup`) | view | Verify the resolved `.claude` path, claude binary, and WSL distro → open preferences to override |
 
 > The old `Resume Last` and `Search Sessions` are merged into `list-sessions` (newest first, so the top row is the most recent and pressing Enter to resume it doubles as "resume last"). `CLI Cheatsheet`, the slash-command runner, `Send to Claude Code`, and the usage/quota command were removed.
 > Where launching isn't possible, the command is copied to the clipboard automatically and a Toast tells you.
@@ -51,7 +52,8 @@ And because of native deps like esbuild, **node_modules is per-OS**. So run dev 
 | Real dev (hot reload) | **Windows native** | `npm install` → `npm run dev` |
 
 Write code on WSL, leave `mise run sync-watch` running, and every save auto-copies to the
-Windows-side `C:\Users\user\dev\raycast-claude-launcher`, where `npm run dev` hot-reloads.
+Windows-side `C:\Users\<you>\dev\raycast-claude-launcher` (the Windows username is resolved
+automatically, not hardcoded), where `npm run dev` hot-reloads.
 (`node_modules` is rebuilt per OS, so it's excluded from the sync. `--inplace` lets it overwrite
 even under `ray develop`'s file lock. To change the destination: `WIN_DEST=/mnt/c/... mise run sync`
 or `scripts/sync-to-windows.sh <dest>`.)
@@ -72,7 +74,7 @@ npm run dev     # = ray develop. A green icon means dev is running.
 
 | Setting | mac | Windows (WSL) |
 |---|---|---|
-| Claude Home | empty (auto `~/.claude`) | the WSL UNC path, e.g. `\\wsl.localhost\Ubuntu\home\you\.claude` |
+| Claude Home | empty (auto `~/.claude`) | empty — the WSL home is queried automatically; set a UNC path only to override, e.g. `\\wsl.localhost\Ubuntu\home\you\.claude` |
 | claude binary | `claude` | `claude` |
 | WSL distro name | — | e.g. `Ubuntu` |
 
