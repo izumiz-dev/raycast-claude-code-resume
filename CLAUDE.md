@@ -21,7 +21,6 @@ Two hard constraints shape every decision:
 src/
   list-sessions.tsx   List/search session history → resume (primary) / copy (fallback)
   open-project.tsx    Pick a recent project → start claude there (new / --continue)
-  skills-agents.tsx   Browse/preview ~/.claude/skills and agents (read-only)
   setup.tsx           Verify the detected .claude stores + claude binary; open preferences
   lib/
     platform.ts       Store resolution, command building, launchInteractive() — the core

@@ -23,13 +23,6 @@
       "mode": "view"
     },
     {
-      "name": "skills-agents",
-      "title": "Browse Claude Code Skills & Agents",
-      "subtitle": "Claude Code",
-      "description": "Browse and preview the Claude Code skills and agents defined under ~/.claude.",
-      "mode": "view"
-    },
-    {
       "name": "setup",
       "title": "Check Claude Code Setup",
       "subtitle": "Claude Code",

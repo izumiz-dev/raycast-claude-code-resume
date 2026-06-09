@@ -111,15 +111,13 @@ async function hasProjects(root: string): Promise<boolean> {
   return (await readDirSafe(path.join(root, "projects"))).length > 0;
 }
 
-/** The store the global (non-session) views read: skills/agents and the Setup defaults. */
+/** The store the global (non-session) views read: the projects dir and the Setup defaults. */
 async function primaryRoot(): Promise<string> {
   return (await claudeStores())[0].root;
 }
 
 export const projectsDir = async () =>
   path.join(await primaryRoot(), "projects");
-export const skillsDir = async () => path.join(await primaryRoot(), "skills");
-export const agentsDir = async () => path.join(await primaryRoot(), "agents");
 
 export const claudeBin = () => prefs().claudeBin?.trim() || "claude";
 
