@@ -58,6 +58,21 @@ export default function Setup() {
       hint: "How this extension opens a terminal and launches claude.",
     });
 
+    if (cfg.macTerminal) {
+      const labels: Record<string, string> = {
+        terminal: "Terminal.app",
+        iterm: "iTerm2",
+        ghostty: "Ghostty",
+      };
+      out.push({
+        id: "macTerminal",
+        title: "Terminal",
+        value: labels[cfg.macTerminal] ?? cfg.macTerminal,
+        status: "info",
+        hint: "The terminal app interactive sessions launch in. Change it in preferences.",
+      });
+    }
+
     if (isWindows) {
       const distroOk = await wslDistroExists();
       out.push({

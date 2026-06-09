@@ -18,6 +18,7 @@ interface Prefs {
   claudeBin?: string;
   wslDistro?: string;
   winShell?: string;
+  macTerminal?: string;
 }
 
 export const isWindows = process.platform === "win32";
@@ -164,12 +165,14 @@ export async function resolvedConfig(): Promise<{
   claudeHome: string;
   claudeBin: string;
   wslDistro?: string;
+  macTerminal?: string;
 }> {
   return {
     platform: isWindows ? "Windows (WSL)" : isMac ? "macOS" : "Linux",
     claudeHome: await claudeHome(),
     claudeBin: claudeBin(),
     wslDistro: isWindows ? prefs().wslDistro?.trim() || "Ubuntu" : undefined,
+    macTerminal: isMac ? macTerminal() : undefined,
   };
 }
 
@@ -353,7 +356,18 @@ async function launchWindowsNative(
   }
 }
 
-/** macOS: use Terminal's `do script` to open in the user's login shell. */
+/** The macOS terminal app to launch sessions in (Terminal.app by default). */
+type MacTerminal = "terminal" | "iterm" | "ghostty";
+function macTerminal(): MacTerminal {
+  const t = prefs().macTerminal?.trim();
+  return t === "iterm" || t === "ghostty" ? t : "terminal";
+}
+
+/**
+ * macOS: write a temp script that reproduces the session (cd → claude → exec the login
+ * shell so the window stays open), then open it in the user's chosen terminal app.
+ * All three terminals start a login interactive shell, so mise and the rest are set up.
+ */
 async function launchMac(
   cwd: string | undefined,
   extra: string[],
@@ -361,14 +375,56 @@ async function launchMac(
   const inner = `${claudeBin()}${extra.length ? " " + extra.map(shArg).join(" ") : ""}`;
   const shell = process.env.SHELL || "/bin/zsh";
   const body = `${cwd ? `cd ${shArg(cwd)} && ` : ""}${inner}\nexec ${shArg(shell)}\n`;
-  // Terminal starts a login interactive shell by default, so mise and the rest are set up.
   const tmp = path.join(os.tmpdir(), `raycast-claude-${Date.now()}.sh`);
   await fs.writeFile(tmp, body, { mode: 0o755 });
+  switch (macTerminal()) {
+    case "iterm":
+      return launchMacIterm(tmp);
+    case "ghostty":
+      return launchMacGhostty(tmp, shell);
+    default:
+      return launchMacTerminal(tmp);
+  }
+}
+
+/** Terminal.app: `do script` runs the temp script in a new tab/window. */
+async function launchMacTerminal(tmp: string): Promise<void> {
   await run("osascript", [
     "-e",
     'tell application "Terminal" to activate',
     "-e",
     `tell application "Terminal" to do script "source ${tmp}"`,
+  ]);
+}
+
+/**
+ * iTerm2: AppleScript — make a new window whose session runs the temp script.
+ * `do script ... in <new session>` so the command lands in the window we just created.
+ */
+async function launchMacIterm(tmp: string): Promise<void> {
+  const script = [
+    'tell application "iTerm"',
+    "  activate",
+    "  set w to (create window with default profile)",
+    "  tell current session of w",
+    `    write text "source ${tmp}"`,
+    "  end tell",
+    "end tell",
+  ].join("\n");
+  await run("osascript", ["-e", script]);
+}
+
+/**
+ * Ghostty: no AppleScript dictionary, so drive it via `open`. `-n` forces a new instance
+ * so we always get a fresh window; `--args` passes Ghostty CLI flags. `--command` runs our
+ * login shell sourcing the temp script (the shell's `exec` at the end keeps the window open).
+ */
+async function launchMacGhostty(tmp: string, shell: string): Promise<void> {
+  await run("open", [
+    "-na",
+    "Ghostty",
+    "--args",
+    `--command=${shell} -c 'source ${tmp}'`,
   ]);
 }
 

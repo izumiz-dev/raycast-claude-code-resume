@@ -72,6 +72,19 @@
         { "title": "PowerShell 7 (pwsh)", "value": "pwsh" },
         { "title": "Windows PowerShell (powershell)", "value": "powershell" }
       ]
+    },
+    {
+      "name": "macTerminal",
+      "title": "macOS Terminal",
+      "description": "macOS only. Which terminal app to launch interactive sessions in.",
+      "type": "dropdown",
+      "required": false,
+      "default": "terminal",
+      "data": [
+        { "title": "Terminal.app", "value": "terminal" },
+        { "title": "iTerm2", "value": "iterm" },
+        { "title": "Ghostty", "value": "ghostty" }
+      ]
     }
   ],
   "dependencies": {
