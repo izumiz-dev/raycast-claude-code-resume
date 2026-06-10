@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────
-# Strictly pin the Raycast extension's build environment (reproducible build / pnpm).
+# Strictly pin the Raycast extension's build environment.
 # `cd` into this directory and the tools/env below take effect automatically.
 # ─────────────────────────────────────────────────────────────
 
@@ -15,10 +15,8 @@ idiomatic_version_file_enable_tools = []
 not_found_auto_install = false
 
 [tools]
-# The Raycast `ray` CLI wants a recent Node
-node = "latest"
-# Package manager is pnpm (kept in sync with package.json's packageManager)
-pnpm = "latest"
+# Use the latest LTS release; npm is bundled with Node.
+node = "lts"
 
 [env]
 NODE_ENV = "development"
@@ -28,34 +26,34 @@ _.path = ["{{config_root}}/node_modules/.bin"]
 # ───────────────────────── tasks (build commands consolidated in mise) ─────────────────────────
 
 [tasks.install]
-description = "Resolve dependencies (pnpm install). No quoting, so it works under pwsh too"
-run = "pnpm install"
+description = "Resolve dependencies (npm install)"
+run = "npm install"
 
 [tasks.clean]
-description = "Remove node_modules (OS-independent; scripts/clean.mjs; keeps pnpm-lock.yaml)"
+description = "Remove node_modules (OS-independent; scripts/clean.mjs; keeps package-lock.json)"
 run = "node scripts/clean.mjs"
 
 [tasks.build]
 description = "Build the Raycast extension (includes type checking)"
-run = "pnpm exec ray build -e dist"
+run = "npm run build"
 
 [tasks.dev]
 description = "Load into Raycast in development mode"
-run = "pnpm exec ray develop"
+run = "npm run dev"
 
 [tasks.lint]
 description = "Lint"
-run = "pnpm exec ray lint"
+run = "npm run lint"
 
 [tasks.reset]
 description = "Full reset → reinstall → build (run in sequence)"
-run = ["node scripts/clean.mjs", "pnpm install", "pnpm exec ray build -e dist"]
+run = ["node scripts/clean.mjs", "npm install", "npm run build"]
 
 # Array form (not a multiline script) so each line also runs under Windows' default cmd /c
 [tasks.doctor]
-description = "Check the environment (node/pnpm/ray versions)"
+description = "Check the environment (node/npm/ray versions)"
 run = [
   "node -v",
-  "pnpm -v",
-  "pnpm exec ray --version || echo ray becomes available after pnpm install",
+  "npm -v",
+  "npm exec -- ray --version || echo ray becomes available after npm install",
 ]

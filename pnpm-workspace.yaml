@@ -1,9 +1,0 @@
-# pnpm settings (pnpm 11+ no longer reads the "pnpm" field in package.json).
-# Exact-pin @types/react / @types/node to avoid the TS2786 bigint error
-# against @raycast/api's React 19 — do not loosen these.
-# esbuild's install script writes the platform binary; allow it (pnpm blocks dep scripts by default).
-allowBuilds:
-  esbuild: true
-overrides:
-  "@types/node": 22.19.17
-  "@types/react": 19.0.10

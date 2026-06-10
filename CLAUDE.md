@@ -26,10 +26,10 @@ src/
     platform.ts       Store resolution, command building, launchInteractive() — the core
     sessions.ts       Read & parse the project JSONL into Session[] (each tagged by backend)
 scripts/
-  clean.mjs           OS-independent node_modules cleanup, keeps pnpm-lock.yaml (pwsh-safe)
+  clean.mjs           OS-independent node_modules cleanup, keeps package-lock.json (pwsh-safe)
 docs/
   windows-native-claude.md  Notes on the WSL + Windows-native backend design
-mise.toml             Pinned toolchain (node/pnpm) + all build tasks
+mise.toml             Pinned Node toolchain + all build tasks
 ```
 
 `lib/platform.ts` is the heart. A session belongs to a **backend** (`native` or `wsl`); on
@@ -55,8 +55,8 @@ Windows user with both WSL and native sessions); on a single-environment host it
 
 - **All UI text and code comments are in English.** Keep it that way — do not introduce Japanese.
 - TypeScript only (Raycast requirement). React with `useEffect`/`useState`.
-- Pins matter: `@types/react` 19.0.10 and `@types/node` 22.19.17 are exact-pinned via
-  `overrides` in pnpm-workspace.yaml (pnpm 11+ ignores the package.json `pnpm` field) to avoid the TS2786 bigint error against @raycast/api's React 19. Don't loosen them.
+- `@types/react` 19.0.10 and `@types/node` 22.19.17 are exact direct dependencies to avoid
+  the TS2786 bigint error against @raycast/api's React 19. Verify the build before changing them.
 - Be careful with quotes in `Action`/label strings — an autocapitalizer can rewrite words on
   `ray lint --fix`; avoid inner double-quotes in titles.
 - **No `menu-bar` commands.** Raycast for Windows doesn't support them, and this extension
@@ -77,5 +77,5 @@ mise run dev       # ray develop (hot reload, on the same OS as the Raycast app)
 `ray develop` only runs on the **same OS as the Raycast app**, and `node_modules` is per-OS
 (native esbuild) — to test the Windows backends, clone the repo on Windows and use the same
 mise flow there (`winget install jdx.mise`, then `mise trust` → `mise install` →
-`mise run install` → `mise run dev`). Windows uses mise + pnpm too — don't fall back to npm.
+`mise run install` → `mise run dev`). Windows uses the same mise + npm flow.
 Always run `mise run build` and `mise run lint` before committing.

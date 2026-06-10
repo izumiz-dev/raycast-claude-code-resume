@@ -64,12 +64,12 @@ If `claude` can't be found, a Toast appears with an **Open Preferences** action 
 
 ### Prerequisites
 
-The toolchain is pinned with [mise](https://mise.jdx.dev/). Everything — Node version, pnpm version, and all build tasks — is declared in `mise.toml`.
+The toolchain is managed with [mise](https://mise.jdx.dev/). `mise.toml` tracks the latest Node.js LTS release and defines all build tasks; npm is bundled with Node.js.
 
 ```bash
 cd raycast-claude-code-resume
-mise install            # install pinned Node / pnpm
-mise run install        # pnpm install
+mise install            # install the latest Node.js LTS (including npm)
+mise run install        # npm install
 mise run dev            # load into Raycast in dev mode
 ```
 
