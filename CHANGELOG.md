@@ -1,6 +1,6 @@
 # Claude Code Resume Changelog
 
-## [Initial Version] - {PR_MERGE_DATE}
+## [1.0.0] - 2026-06-10
 
 - Resume any past Claude Code session (`claude -r <id>`), picked from your full session history with recall: Claude's auto title, the first prompt, the latest prompt, and the last reply.
 - Open a recent project and start a new session or continue the last one (`--continue`).

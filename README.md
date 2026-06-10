@@ -1,11 +1,25 @@
-# Claude Code Resume (Raycast extension)
+# Claude Code Resume
 
 **Resume any past Claude Code session, not just the last one — from Raycast, on macOS and Windows.**
 
-`claude --continue` only takes you back to the most recent session per directory. This extension
-reads your real session history (the JSONL transcripts under `~/.claude/projects`) and lets you
-jump back into *any* session, with enough recall to know which one you want before you commit:
-Claude's auto title, the first prompt, the latest prompt, and the last reply.
+`claude --continue` only takes you back to the most recent session per directory. This extension reads your full session history (the JSONL transcripts under `~/.claude/projects`) and lets you jump back into *any* session, with enough recall to know which one you want before you commit: Claude's auto title, the first prompt, the latest prompt, and the last reply.
+
+![Resume Claude Code Session — session list with detail panel showing title, first prompt, latest prompt, and last reply](metadata/claude-code-resume-2.png)
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| **Resume Claude Code Session** | Browse session history (newest first) → resume any session (`claude -r <id>`) in its original directory |
+| **Open Claude Code Project** | Pick a recent project → start a new session or continue the last one |
+| **Check Claude Code Setup** | Verify detected `.claude` stores and the `claude` binary per environment; open preferences to override |
+
+> The session list is newest-first, so pressing Enter on the top row doubles as "resume last".
+> Where launching isn't possible (terminal not found, etc.), the command is copied to the clipboard and a Toast tells you.
+
+![Open Claude Code Project — project list](metadata/claude-code-resume-1.png)
+
+![Check Claude Code Setup — platform, terminal, store, and binary status](metadata/claude-code-resume-3.png)
 
 ## What makes this different
 
@@ -13,103 +27,84 @@ There are other Claude Code extensions on the Store; this one fills a different 
 
 | | [Claude Code Launcher](https://www.raycast.com/stephendolan/claude-code-launcher) | [Claude Sessions](https://www.raycast.com/kud/claude-sessions) | **Claude Code Resume** (this) |
 |---|---|---|---|
-| Resume a specific past session (`claude -r <id>`) | — | — (project-level `--continue` only) | **Yes** |
-| Session recall (title, first/latest prompt, last reply) | — | — | **Yes** (parsed from the JSONL transcripts) |
-| Project list | Manually saved favorites | From `~/.claude.json` registry | **Auto-derived from session history** — nothing to register |
-| Windows support | macOS only | macOS only | **macOS + Windows (WSL and native PowerShell, auto-detected)** |
+| Resume a specific past session (`claude -r <id>`) | — | — | **Yes** |
+| Session recall (title, first/latest prompt, last reply) | — | — | **Yes** |
+| Project list source | Hand-curated favorites | `~/.claude.json` registry | **Auto-derived from session history** |
+| Windows support | macOS only | macOS only | **macOS + Windows (WSL + native PowerShell)** |
 
-In short: *Claude Code Launcher* is a hand-curated project bookmarker, *Claude Sessions* manages
-the project registry, and **this extension is about getting back into a specific conversation** —
-including on Windows, where no Claude Code extension worked before.
+## Design
 
-## Design pillars
-
-- **The primary action is "launch".** The extension's job is to take you there. Copy is the fallback for when launching isn't possible.
-- What we launch is **interactive claude (the flat-rate path)**. We never use `-p`, so there is **zero metered billing**.
-- **No extra binaries required** (the `claude` CLI is enough).
-- Sessions open in **your real login shell**, so your everyday dev environment (mise, node, npx for MCP) is available.
-- OS differences are confined to "how the terminal opens" (mac: Terminal.app / iTerm2 / Ghostty; Windows: `wt + wsl` for WSL sessions, `wt + PowerShell` for Windows-native ones).
+- **The primary action is "launch"** — the extension's job is to take you there. Copy is the fallback.
+- Launches **interactive `claude`** only (the flat-rate path). No `-p`, no metered billing.
+- **No extra binaries required** — the `claude` CLI on PATH is the only hard dependency.
+- Sessions open in **your real login shell**, so mise, node, and MCP tools are available.
 - We only read files under `~/.claude`, so browsing is **completely free**.
-
-## Commands
-
-| Command (title) | mode | Enter |
-|---|---|---|
-| **Resume Claude Code Session** (`list-sessions`) | view | Search history (newest first) → resume the chosen session (`claude -r <id>`) |
-| **Open Claude Code Project** (`open-project`) | view | A few chars of a repo → start claude there (`Start New Session` / `Continue Last Session`) |
-| **Check Claude Code Setup** (`setup`) | view | Verify the detected `.claude` stores, the claude binary per environment, and the WSL distro → open preferences to override |
-
-> The session list is newest first, so the top row is the most recent and pressing Enter on it doubles as "resume last".
-> Where launching isn't possible, the command is copied to the clipboard automatically and a Toast tells you.
-> The session detail is recall-first: it shows Claude's auto title, the first prompt, the latest prompt, and the last reply (parsed from the JSONL) so you can tell what a session was about before resuming — the command is kept below as a fallback.
 
 ## Settings (⌘,)
 
-| Setting | mac | Windows |
+| Setting | macOS | Windows |
 |---|---|---|
-| Claude Home | empty (auto `~/.claude`) | empty — both stores are auto-detected (see below); set a path only to force a single store |
+| Claude Home | empty (auto `~/.claude`) | empty — both stores are auto-detected; set only to force a single store |
 | Claude Binary | `claude` | `claude` |
-| WSL Distro | — | e.g. `Ubuntu` (only if you use WSL) |
-| Windows Shell | — | `pwsh` (default) or `powershell` — used to launch Windows-native sessions |
 | macOS Terminal | `Terminal.app` (default), `iTerm2`, or `Ghostty` | — |
+| WSL Distro | — | e.g. `Ubuntu` (check with `wsl -l -q`) |
+| Windows Shell | — | `pwsh` (default) or `powershell` |
+
+> **Ghostty (known behavior):** Ghostty has no AppleScript interface, so each session opens as a separate app instance — one Dock icon per session. Add `quit-after-last-window-closed = true` to your Ghostty config (`~/.config/ghostty/config`) so finished instances clean themselves up.
 
 ### Windows: two backends, auto-detected
 
-On Windows you may run Claude Code from **WSL** and/or **natively from PowerShell/cmd**, and
-each keeps its own `.claude`. The extension reads **both** and tags each session so it relaunches
-in the right place (none of the paths are hardcoded to a user):
+On Windows you may run Claude Code from **WSL** and/or **natively from PowerShell**, and each keeps its own `.claude`. The extension reads **both** and tags each session so it relaunches in the right place:
 
-- **WSL sessions.** Store is `~/.claude` inside WSL (the home is queried, not assumed). `cwd` is a
-  Linux path. Launch writes a temp `.sh` and runs `wt -w 0 wsl -d <distro> -- <login-shell> -lic
-  "source <script>"` (falls back to plain `wsl` if `wt` is missing), with `exec <login-shell>` so
-  the window stays open. Run `claude login` inside WSL.
-- **Windows-native sessions.** Store is `C:\Users\<you>\.claude` (via the OS home). `cwd` is a
-  Windows path. Launch writes a temp `.ps1` and runs `wt -w 0 <pwsh|powershell> -NoExit
-  -ExecutionPolicy Bypass -File <script>` (falls back to the shell directly), which `Set-Location`s
-  into the dir and runs `claude`. Run `claude login` in PowerShell.
+- **WSL sessions** — store is `~/.claude` inside WSL. Launch runs `wt + wsl` with a login shell.
+- **Windows-native sessions** — store is `C:\Users\<you>\.claude`. Launch runs `wt + PowerShell` with a temp `.ps1` that rebuilds PATH/PATHEXT from the persisted environment before running `claude`.
 
-When the session list mixes both, a small `WSL` / `Windows/native` tag distinguishes them. Use the
-**Check Claude Code Setup** command to see which stores were detected and whether `claude` resolves
-in each environment.
+Use **Check Claude Code Setup** to see which stores were detected and whether `claude` resolves in each environment.
 
-## Recommended setup
+## Tips
 
-- **Bind a global hotkey to `list-sessions`** (e.g. ⌥⌘C) → jump back into where you left off from anywhere.
-- **Bind a hotkey to `open-project`** too → start Claude in any recent repo in a couple of keystrokes.
+- **Bind a global hotkey to `Resume Claude Code Session`** (e.g. ⌥⌘C) to jump back into where you left off from anywhere.
+- **Bind a hotkey to `Open Claude Code Project`** to start Claude in any recent repo in a couple of keystrokes.
 
 ---
 
 ## Development
 
-### Install (environment pinned with mise + pnpm)
+### Prerequisites
+
+The toolchain is pinned with [mise](https://mise.jdx.dev/). Everything — Node version, pnpm version, and all build tasks — is declared in `mise.toml`.
 
 ```bash
 cd raycast-claude-code-resume
-mise install            # install the tools pinned in mise.toml (Node / pnpm)
-mise run install        # clean dependency resolution (pnpm install)
-mise run dev            # load into Raycast in dev mode (on macOS / Raycast for Windows)
+mise install            # install pinned Node / pnpm
+mise run install        # pnpm install
+mise run dev            # load into Raycast in dev mode
 ```
 
-Others: `mise run build` / `mise run lint` / `mise run reset` (full reset → rebuild) / `mise run doctor` (environment check).
+Other tasks: `mise run build` · `mise run lint` · `mise run reset` (full reset + rebuild) · `mise run doctor` (environment check).
 
-> The environment is **strictly pinned with mise** (`min_version`, `mise.lock`, exact pins, and `overrides` in `pnpm-workspace.yaml` to unify `@types/react` at 19.0.10).
+> `ray develop` only runs **on the same OS as the Raycast app**. `node_modules` is per-OS (native esbuild), so to test Windows backends you must clone and run dev natively on Windows.
 
 ### Developing for Windows
 
-`ray develop` only runs **on the same OS as the Raycast app** (it connects over same-OS local IPC).
-And because of native deps like esbuild, **node_modules is per-OS**. So to test the Windows
-backends, clone the repo on Windows and run dev natively there:
-
 ```powershell
-# Windows (PowerShell). Install mise once: winget install jdx.mise
-git clone https://github.com/izumiz-dev/raycast-claude-code-resume C:\Users\user\dev\raycast-claude-code-resume
-cd C:\Users\user\dev\raycast-claude-code-resume
-mise trust          # trust mise.toml on the fresh clone
-mise install        # Node / pnpm pinned by mise.toml + mise.lock (same versions as macOS)
-mise run install    # pnpm install — rebuilds the Windows-native node_modules (another OS's can't be reused)
-mise run dev        # = ray develop. A green icon means dev is running.
+# PowerShell — install mise once: winget install jdx.mise
+git clone https://github.com/izumiz-dev/raycast-claude-code-resume
+cd raycast-claude-code-resume
+mise trust
+mise install
+mise run install
+mise run dev
 ```
 
-- In Raycast → Preferences → Advanced/Developer, turn **Auto-reload on Save** ON.
+- Enable **Auto-reload on Save** in Raycast → Preferences → Advanced/Developer.
 - If hot reload isn't kicking in: after `mise run build`, run `start raycast://extensions/raycast/raycast/reload-extensions`.
-- Windows developer support is in beta — "unfinished but usable in practice". If `ray develop` isn't found, confirm Raycast Windows' Developer features are enabled.
+
+### Store screenshots
+
+Screenshots are in `metadata/` (2000×1250, generated with Raycast's Window Capture `⇧⌘6`). To regenerate them, run the demo store generator first to get a realistic session list, then take new captures:
+
+```bash
+node scripts/demo-store.mjs          # generates ~/demo-claude with fictional sessions
+# Point "Claude Home" preference at ~/demo-claude, take captures, then clear it
+```
