@@ -1,10 +1,11 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
-  "name": "claude-launcher",
-  "title": "Claude Code Launcher",
-  "description": "Launch and resume Claude Code sessions from Raycast. Opens your real login shell, so your full dev environment (mise, node, npx) is available. Works on macOS and Windows + WSL.",
+  "name": "claude-code-resume",
+  "title": "Claude Code Resume",
+  "description": "Resume any past Claude Code session, not just the last one. Browse your full session history with recall (title, first and latest prompt, last reply) and jump back in — on macOS and Windows (WSL and native).",
   "icon": "icon.png",
-  "author": "you",
+  "author": "izumiz",
+  "categories": ["Developer Tools", "Productivity"],
   "license": "MIT",
   "platforms": ["macOS", "Windows"],
   "commands": [
