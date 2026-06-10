@@ -23,14 +23,9 @@
 
 ## What makes this different
 
-There are other Claude Code extensions on the Store; this one fills a different gap:
-
-| | [Claude Code Launcher](https://www.raycast.com/stephendolan/claude-code-launcher) | [Claude Sessions](https://www.raycast.com/kud/claude-sessions) | **Claude Code Resume** (this) |
-|---|---|---|---|
-| Resume a specific past session (`claude -r <id>`) | — | — | **Yes** |
-| Session recall (title, first/latest prompt, last reply) | — | — | **Yes** |
-| Project list source | Hand-curated favorites | `~/.claude.json` registry | **Auto-derived from session history** |
-| Windows support | macOS only | macOS only | **macOS + Windows (WSL + native PowerShell)** |
+- **Resume any session** — not just the most recent one per directory. Pick from your full history with enough recall to know which session you want before you commit: Claude's auto title, the first prompt, the latest prompt, and the last reply.
+- **Windows support** — both WSL and native PowerShell sessions are auto-detected and relaunched in the right environment.
+- **Project list auto-derived** from session history — no manual curation needed.
 
 ## Design
 

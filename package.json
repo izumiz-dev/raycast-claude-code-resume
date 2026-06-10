@@ -12,21 +12,20 @@
     {
       "name": "list-sessions",
       "title": "Resume Claude Code Session",
-      "subtitle": "Claude Code",
       "description": "Browse your Claude Code session history (newest first) and resume any session in its original directory.",
       "mode": "view"
     },
     {
       "name": "open-project",
       "title": "Open Claude Code Project",
-      "subtitle": "Claude Code",
+
       "description": "Pick a recent project and start Claude Code in that directory — a new session or continue the last one.",
       "mode": "view"
     },
     {
       "name": "setup",
       "title": "Check Claude Code Setup",
-      "subtitle": "Claude Code",
+
       "description": "Verify the resolved paths and the claude binary, and open preferences to override them.",
       "mode": "view"
     }
@@ -82,7 +81,7 @@
     }
   ],
   "dependencies": {
-    "@raycast/api": "^1.80.0"
+    "@raycast/api": "^1.104.19"
   },
   "devDependencies": {
     "@raycast/eslint-config": "^2.0.4",
