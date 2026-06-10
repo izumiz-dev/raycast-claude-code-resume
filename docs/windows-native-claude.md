@@ -24,7 +24,7 @@ The extension hardwires `isWindows ⇒ WSL backend` (`src/lib/platform.ts`):
 | Binary | `claude` on PATH in the WSL login shell | `C:\Users\user\.local\bin\claude.exe` (PE32+), on PATH as `claude` |
 
 So a single Windows user can have **both** stores at once (this machine does: the
-`raycast-claude-launcher` repo appears in WSL as `/home/user/repos/...` and natively as
+`raycast-claude-code-resume` repo appears in WSL as `/home/user/repos/...` and natively as
 `C:\Users\user\dev\...` — genuinely different working copies, keep them separate).
 
 ## Design to support it

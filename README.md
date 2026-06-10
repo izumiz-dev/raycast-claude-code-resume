@@ -84,7 +84,7 @@ in each environment.
 ### Install (environment pinned with mise + pnpm)
 
 ```bash
-cd raycast-claude-launcher
+cd raycast-claude-code-resume
 mise install            # install the tools pinned in mise.toml (Node / pnpm)
 mise run install        # clean dependency resolution (pnpm install)
 mise run dev            # load into Raycast in dev mode (on macOS / Raycast for Windows)
@@ -94,29 +94,17 @@ Others: `mise run build` / `mise run lint` / `mise run reset` (full reset → re
 
 > The environment is **strictly pinned with mise** (`min_version`, `mise.lock`, exact pins, and `pnpm.overrides` to unify `@types/react` at 19.0.10).
 
-### Developing for Windows (write on WSL, test on Windows)
+### Developing for Windows
 
 `ray develop` only runs **on the same OS as the Raycast app** (it connects over same-OS local IPC).
-And because of native deps like esbuild, **node_modules is per-OS**. So run dev natively on Windows.
-
-| Step | Where | Command |
-|---|---|---|
-| Type check / bundle check (fast) | WSL | `mise run build` |
-| Sync source WSL → Windows | WSL | `mise run sync` (watch: `mise run sync-watch`) |
-| Real dev (hot reload) | **Windows native** | `npm install` → `npm run dev` |
-
-Write code on WSL, leave `mise run sync-watch` running, and every save auto-copies to the
-Windows-side `C:\Users\<you>\dev\raycast-claude-launcher` (the Windows username is resolved
-automatically, not hardcoded), where `npm run dev` hot-reloads.
-(`node_modules` is rebuilt per OS, so it's excluded from the sync. `--inplace` lets it overwrite
-even under `ray develop`'s file lock. To change the destination: `WIN_DEST=/mnt/c/... mise run sync`
-or `scripts/sync-to-windows.sh <dest>`.)
+And because of native deps like esbuild, **node_modules is per-OS**. So to test the Windows
+backends, clone the repo on Windows and run dev natively there:
 
 ```powershell
 # Windows (PowerShell). Install Node on Windows; copy the code via git.
-git clone <repo> C:\Users\user\dev\raycast-claude-launcher
-cd C:\Users\user\dev\raycast-claude-launcher
-npm install     # rebuild the Windows-native node_modules (WSL's can't be reused)
+git clone https://github.com/izumiz-dev/raycast-claude-code-resume C:\Users\user\dev\raycast-claude-code-resume
+cd C:\Users\user\dev\raycast-claude-code-resume
+npm install     # rebuild the Windows-native node_modules (another OS's can't be reused)
 npm run dev     # = ray develop. A green icon means dev is running.
 ```
 

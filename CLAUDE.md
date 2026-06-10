@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for Claude Code when working in this directory (`raycast-claude-launcher/`).
+Guidance for Claude Code when working in this directory (`raycast-claude-code-resume/`).
 
 ## What this is
 
@@ -27,7 +27,6 @@ src/
     sessions.ts       Read & parse the project JSONL into Session[] (each tagged by backend)
 scripts/
   clean.mjs           OS-independent node_modules/lockfile cleanup (pwsh-safe)
-  sync-to-windows.sh  rsync WSL → Windows (for dev on the Windows-native Raycast)
 docs/
   windows-native-claude.md  Notes on the WSL + Windows-native backend design
 mise.toml             Pinned toolchain (node/pnpm) + all build tasks
@@ -72,10 +71,10 @@ Run tasks through mise (the toolchain is pinned):
 ```bash
 mise run build     # ray build -e dist (includes type check) — the fast local verify
 mise run lint      # ray lint (ESLint + Prettier)
-mise run sync      # rsync to the Windows side (mise run sync-watch to keep watching)
+mise run dev       # ray develop (hot reload, on the same OS as the Raycast app)
 ```
 
 `ray develop` only runs on the **same OS as the Raycast app**, and `node_modules` is per-OS
-(native esbuild). So: edit on WSL, `mise run build` to verify, `mise run sync` to Windows, then
-`npm install` + `npm run dev` on the Windows side for the real hot-reload loop. Always run
-`mise run build` and `mise run lint` before committing.
+(native esbuild) — to test the Windows backends, clone the repo on Windows and run
+`npm install` + `npm run dev` there. Always run `mise run build` and `mise run lint`
+before committing.

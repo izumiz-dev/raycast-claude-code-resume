@@ -51,14 +51,6 @@ run = "pnpm exec ray lint"
 description = "Full reset → reinstall → build (run in sequence)"
 run = ["node scripts/clean.mjs", "pnpm install", "pnpm exec ray build -e dist"]
 
-[tasks.sync]
-description = "Sync source from WSL to Windows (excludes node_modules; --inplace)"
-run = "bash scripts/sync-to-windows.sh"
-
-[tasks.sync-watch]
-description = "Watch for changes and auto-sync (requires inotify-tools)"
-run = "bash scripts/sync-to-windows.sh --watch"
-
 [tasks.doctor]
 description = "Check the environment (node/pnpm/ray versions)"
 run = """
